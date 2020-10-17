@@ -1,19 +1,22 @@
 package com.codepath.apps.restclienttemplate;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.content.ClipData;
+import android.content.Intent;
 import android.os.Bundle;
-import android.preference.SwitchPreference;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
+import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
-import com.github.scribejava.apis.TwitterApi;
 
 import org.json.JSONException;
+import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,8 @@ import okhttp3.Headers;
 public class TimelineActivity extends AppCompatActivity {
 
     public static final String TAG = "TimelineActivity";
+    private final int TWEET_POST_REQUEST_CODE = 1337;
+
     RestClient client;
     RecyclerView timeline;
     ItemsAdapter itemsAdapter;
@@ -77,5 +82,28 @@ public class TimelineActivity extends AppCompatActivity {
                 Log.e(TAG, "OOPH in populateHomeTimeline()", throwable);
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    public void onComposeClick(MenuItem item) {
+        // start compose activity
+        startActivityForResult(new Intent(this, ComposeActivity.class), TWEET_POST_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(requestCode == TWEET_POST_REQUEST_CODE && resultCode == RESULT_OK){
+            // get tweet
+            tweets.add(0, (Tweet)Parcels.unwrap( data.getParcelableExtra("tweet")) );
+            // update recyclerview
+            itemsAdapter.notifyItemInserted(0);
+            timeline.smoothScrollToPosition(0);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
